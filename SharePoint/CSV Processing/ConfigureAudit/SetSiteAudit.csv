@@ -1,0 +1,3 @@
+SiteURL,TrimLogs,DaysToKeepLogs
+http://radar.apple.com,$true,90
+http://appleseed.apple.com,$false,

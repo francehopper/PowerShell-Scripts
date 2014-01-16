@@ -1,0 +1,4 @@
+site,list,view_name,sort_field,index_on,direction,limit
+http://dev/sites/Product,A big list,New View,Created,Created,ascending,5000
+http://dev/sites/Product,A bigger list,New View,Created,Created,descending,5000
+http://dev/sites/Product,A really big list,New View,Created,Created,ascending,5000

@@ -1,0 +1,3 @@
+Site,Action,Target_Site_Collection
+http://dev/sites/product/iamatest,DELETE,
+http://dev/sites/product/iamatesttoo,ARCHIVE,http://dev/sites/product/archived/iamatesttoo
