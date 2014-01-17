@@ -45,79 +45,17 @@ function processSitesList ($mySitesList, $keywordsArray, $libsArray) {
         # Fix the pages
         write-host "Keywords are: $keywordsArray" -foregroundcolor "Gray" #debug
         write-host "libraries are: $libsArray" -foregroundcolor "Gray" #debug
-        write-host "Updating $siteURL" -foregroundcolor "Gray"
+        write-host "Updating $siteURL..." -foregroundcolor "Gray"
         fixString $siteURL $keywordsArray $libsArray
         write-host "Done!" -foregroundcolor "DarkGreen"
     }
     write-host "Updating complete." -foregroundcolor "DarkGreen"
 }
-
-# Currently unused
-function RemoveWebPartFromDB($url, $ListID, $pageName, $spWeb) {
-    try {
-
-        #1. Get List Item
-        $list = $spWeb.Lists[$ListID]
-        $query = new-object Microsoft.SharePoint.SPQuery
-
-        $query.Query = '<Where>
-        <Eq>
-        <FieldRef Name="FileLeafRef"></FieldRef>
-        <Value Type="Text">' +$pageName +'</Value>
-        </Eq>
-        </Where>'
-
-        $items = $list.GetItems($query);
-
-        if($items.Count -eq 0){return}
-        $item = $items[0]
-
-
-        #3. CheckOut before modifying
-        $file = $item.File
-        if ($file.CheckOutType -eq "None"){
-            $file.CheckOut();
-            write-host "CheckOut page $url$([Environment]::NewLine)" -f Yellow
-            }else{
-                $file.CheckIn("checkin");
-                $file.CheckOut();
-                write-host "CheckOut page $url$([Environment]::NewLine)" -f Yellow
-            }
-
-
-            #4. Deleting Web Part    
-            $spWebPartManager = $spWeb.GetLimitedWebPartManager($url, [System.Web.UI.WebControls.WebParts.PersonalizationScope]::Shared)
-            $AllWPs = $spWebPartManager.WebParts | select FatalError, ID
-            $AllWPs | %{
-                $webpart = $_
-                if($webpart.FatalError -eq "True"){
-                    $spWebPartManager.DeleteWebPart($spWebPartManager.WebParts[$webpart.ID])
-                    write-host "Deleted web part $WebPartID from $url.$([Environment]::NewLine)"
-                }
-            }
-
-            #4. Check in Publishing page
-            $file.CheckIn("Remove Error web parts");
-
-            if($list.EnableModeration ){
-                $file.Approve("Approved");
-            }
-            #$page = [Microsoft.SharePoint.Publishing.PublishingPage]::GetPublishingPage($item)
-            $file.Publish("Published");
-
-            write-host "CheckIn page $url$([Environment]::NewLine)" -f Yellow
-
-        }
-    catch {
-        write-host "Removing error webparts in $url. Error: $($_.Exception.Message)`n $($_.InvocationInfo.PositionMessage)`n $($_.ScriptStackTrace)$([Environment]::NewLine)" -f red
-    }
-} # End of function
-
-
-function GetRegxPattern($keyword){
+# end csv processing functions
+function GetRegxPattern($keyword) {
     return "<%@(.*)$keyword(.*)%>"
 }
-
+# main processing function
 function fixString ($siteURL, $keywordsArray, $libsArray) {
     # Build what we need to write to the page
     $content = '"<%@ Register TagPrefix="WpNs1" Namespace="Microsoft.SharePoint.Portal.WebControls" Assembly="Microsoft.SharePoint.Portal, Version=12.0.0.0, Culture=neutral, PublicKeyToken=71e9bce111e9429c"%>
@@ -126,42 +64,41 @@ function fixString ($siteURL, $keywordsArray, $libsArray) {
 <%-- _LocalBinding --%>
 <%@ Page language="C#" MasterPageFile="~masterurl/default.master"    Inherits="Microsoft.SharePoint.WebPartPages.WebPartPage,Microsoft.SharePoint,Version=12.0.0.0,Culture=neutral,PublicKeyToken=71e9bce111e9429c" meta:progid="SharePoint.WebPartPage.Document" %>
 <%@ Register Tagprefix="SharePoint" Namespace="Microsoft.SharePoint.WebControls" Assembly="Microsoft.SharePoint, Version=12.0.0.0, Culture=neutral, PublicKeyToken=71e9bce111e9429c" %> <%@ Register Tagprefix="Utilities" Namespace="Microsoft.SharePoint.Utilities" Assembly="Microsoft.SharePoint, Version=12.0.0.0, Culture=neutral, PublicKeyToken=71e9bce111e9429c" %> <%@ Import Namespace="Microsoft.SharePoint" %> <%@ Register Tagprefix="WebPartPages" Namespace="Microsoft.SharePoint.WebPartPages" Assembly="Microsoft.SharePoint, Version=12.0.0.0, Culture=neutral, PublicKeyToken=71e9bce111e9429c" %>"'
+    # Start a counter we'll use for an array position later
     $currentItemNo = 0
     # Open a connection to SharePoint
-    write-host "Connecting to $siteURL..." -foregroundcolor "Gray"
+    write-host "Connecting to $siteURL..." -foregroundcolor "Yellow"
     $spWeb = Get-SPWeb $siteURL
-    write-host "Value of spWeb is $spWeb" -foregroundcolor "Gray"
+    write-host "Value of spWeb is $spWeb" -foregroundcolor "Gray" #debug
     # Get the contents of the libraries
     foreach ($library in $libsArray) {
-        write-host "Working on $library in libsArray..." -foregroundcolor "Gray"
+        write-host "Working on $library in libsArray..." -foregroundcolor "Gray" #debug
         $curLib = $spWeb.Lists[$library]
-        write-host "Current library list is $curLib." -foregroundcolor "Gray"
+        write-host "Current library list is $curLib." -foregroundcolor "Gray" #debug
         $libItems = $curLib.items
         # Check each item for each of the keywords
         foreach ($item in $libItems) {
-            write-host "Current item is $($item.Title)." -foregroundcolor "Gray"
+            write-host "Current item is $($item.Title)." -foregroundcolor "Gray" #debug
             # Step through each keyword
             foreach ($keyword in $keywordsArray) {
-                write-host "Current keyword is $keyword" -foregroundcolor "Gray"
-                # Check if the keyword is found in the page
-                write-host "Building search..." -foregroundcolor "Yellow"
+                write-host "Current keyword is $keyword" -foregroundcolor "Gray" #debug
+                write-host "Building search for item $($item.Title)..." -foregroundcolor "Yellow"
+                # Build the regx search
                 $search = GetRegxPattern $keyword
                 #write-host "Search is $search" -foregroundcolor "Gray"
-                write-host "Search is $search" -foregroundcolor "Gray"
+                write-host "Search is $search" -foregroundcolor "Gray" #debug
                 write-host "Checking keywords..." -foregroundcolor "Yellow"
-                #write-host "Page content is:" $item["Page Content"] -ForegroundColor "White"
                 # Get the number of items in the list
                 $totalListItems = $curLib.Items.Count
-                write-host "There are $totalListItems items in $curLib" -ForegroundColor "Magenta"
-                
+                write-host "There are $totalListItems items in $curLib" -ForegroundColor "Magenta" #debug
+                # Arrays start at zero so...
                 $itemsToProcess = $totalListItems - 1
-                write-host "Number of items to process is $itemsToProcess" -ForegroundColor "Magenta"
-
-                while ($currentItemNo -le $itemsToProcess) {
-                write-host "CurrentItemNo is $currentItemNo" -ForegroundColor "DarkRed"
+                write-host "Processing array position $currentItemNo" -ForegroundColor "DarkRed" #debug
+                # Get the contents of the current page
                 $reader = new-object System.IO.StreamReader($curLib.Items[$currentItemNo].File.OpenBinaryStream())
                 $str = $reader.ReadToEnd()
-                write-host "Page content is $str" -foregroundcolor "White"
+                write-host "Page content is $str" -foregroundcolor "White" #debug
+                # Search the page for our keyword
                 if ($str -match $search) {
                     write-host "Matched on keyword $search" -foregroundcolor "Magenta"
                     # Keyword was found in the page, check it out for editing
@@ -182,15 +119,15 @@ function fixString ($siteURL, $keywordsArray, $libsArray) {
                     # # Approve the page changes
                     # write-host "Approving..." -foregroundcolor "Yellow"
                     # $item.File.Approve()
-                    write-host "Reticulating splines..." -foregroundcolor "Yellow"
+                    write-host "Reticulating splines..." -foregroundcolor "Yellow" # For fun
                     # Next keyword
                     write-host "Done!" -foregroundcolor "DarkGreen"
                 } # End keyword found actions
                 else {
                     write-host "Keyword $search was not found on $($item.Title)." -foregroundcolor "Red"
                 }
-                } # End While
             } # End keyword checks
+            # Done checking the item for all keywords, increase the array position of the current item so we read the contents of the right item
             $currentItemNo = $currentItemNo + 1
         } # End items loop
         
