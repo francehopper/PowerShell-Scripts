@@ -126,6 +126,7 @@ function fixString ($siteURL, $keywordsArray, $libsArray) {
 <%-- _LocalBinding --%>
 <%@ Page language="C#" MasterPageFile="~masterurl/default.master"    Inherits="Microsoft.SharePoint.WebPartPages.WebPartPage,Microsoft.SharePoint,Version=12.0.0.0,Culture=neutral,PublicKeyToken=71e9bce111e9429c" meta:progid="SharePoint.WebPartPage.Document" %>
 <%@ Register Tagprefix="SharePoint" Namespace="Microsoft.SharePoint.WebControls" Assembly="Microsoft.SharePoint, Version=12.0.0.0, Culture=neutral, PublicKeyToken=71e9bce111e9429c" %> <%@ Register Tagprefix="Utilities" Namespace="Microsoft.SharePoint.Utilities" Assembly="Microsoft.SharePoint, Version=12.0.0.0, Culture=neutral, PublicKeyToken=71e9bce111e9429c" %> <%@ Import Namespace="Microsoft.SharePoint" %> <%@ Register Tagprefix="WebPartPages" Namespace="Microsoft.SharePoint.WebPartPages" Assembly="Microsoft.SharePoint, Version=12.0.0.0, Culture=neutral, PublicKeyToken=71e9bce111e9429c" %>"'
+    $currentItemNo = 0
     # Open a connection to SharePoint
     write-host "Connecting to $siteURL..." -foregroundcolor "Gray"
     $spWeb = Get-SPWeb $siteURL
@@ -149,7 +150,16 @@ function fixString ($siteURL, $keywordsArray, $libsArray) {
                 write-host "Search is $search" -foregroundcolor "Gray"
                 write-host "Checking keywords..." -foregroundcolor "Yellow"
                 #write-host "Page content is:" $item["Page Content"] -ForegroundColor "White"
-                $reader = new-object System.IO.StreamReader($list.Items[1].File.OpenBinaryStream())
+                # Get the number of items in the list
+                $totalListItems = $curLib.Items.Count
+                write-host "There are $totalListItems items in $curLib" -ForegroundColor "Magenta"
+                
+                $itemsToProcess = $totalListItems - 1
+                write-host "Number of items to process is $itemsToProcess" -ForegroundColor "Magenta"
+
+                while ($currentItemNo -le $itemsToProcess) {
+                write-host "CurrentItemNo is $currentItemNo" -ForegroundColor "DarkRed"
+                $reader = new-object System.IO.StreamReader($curLib.Items[$currentItemNo].File.OpenBinaryStream())
                 $str = $reader.ReadToEnd()
                 write-host "Page content is $str" -foregroundcolor "White"
                 if ($str -match $search) {
@@ -177,11 +187,15 @@ function fixString ($siteURL, $keywordsArray, $libsArray) {
                     write-host "Done!" -foregroundcolor "DarkGreen"
                 } # End keyword found actions
                 else {
-                    write-host "Keyword $keyword was not found on $($item.Title)." -foregroundcolor "Red"
+                    write-host "Keyword $search was not found on $($item.Title)." -foregroundcolor "Red"
                 }
+                } # End While
             } # End keyword checks
+            $currentItemNo = $currentItemNo + 1
         } # End items loop
+        
     } # End library loop
+    
 # Eventually, end function
     # Get pages list
         # Loop through list of pages
