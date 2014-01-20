@@ -14,9 +14,7 @@ function processKeywordsList ($myKeywordsList, $myLibsList, $mySitesList) {
         $siteKeywords = $item."keywords" # Get list of keywords
         # Add keywords to array
         $keywordsArray = $keywordsArray + $siteKeywords
-        write-host "keywordsArray now contains $keywordsArray" -foregroundcolor "Gray" #debug 
     }
-    #processSitesList $mySitesList $keywordsArray
     write-host "Done!" -foregroundcolor "DarkGreen"
     processLibrariesList $myLibsList $keywordsArray $mySitesList
 }
@@ -30,7 +28,6 @@ function processLibrariesList ($myLibsList, $keywordsArray, $mySitesList) {
         $siteLibs = $item."lib" # Get list of libraries
         # Add libraries to array
         $libsArray = $libsArray + $siteLibs
-        write-host "libsArray now contains $libsArray" -foregroundcolor "Gray" #debug
     }
     write-host "Done!" -foregroundcolor "DarkGreen"
     processSitesList $mySitesList $keywordsArray $libsArray
@@ -43,8 +40,6 @@ function processSitesList ($mySitesList, $keywordsArray, $libsArray) {
         # Things we need to fetch
         $siteURL = $item."siteURL" # Get the site
         # Fix the pages
-        write-host "Keywords are: $keywordsArray" -foregroundcolor "Gray" #debug
-        write-host "libraries are: $libsArray" -foregroundcolor "Gray" #debug
         write-host "Updating $siteURL..." -foregroundcolor "Gray"
         fixString $siteURL $keywordsArray $libsArray
         write-host "Done!" -foregroundcolor "DarkGreen"
@@ -55,10 +50,6 @@ function processSitesList ($mySitesList, $keywordsArray, $libsArray) {
 function GetRegxPattern($keyword) {
     return "<%@(.*)$keyword(.*)%>"
 }
-function convertToBytes ($newPageContent) {
-    $encoding=new-object System.Text.UTF8Encoding;
-    return $encoding.GetBytes($newPageContent);
-}
 # main processing function
 function fixString ($siteURL, $keywordsArray, $libsArray) {
     # Start a counter we'll use for an array position later
@@ -66,36 +57,25 @@ function fixString ($siteURL, $keywordsArray, $libsArray) {
     # Open a connection to SharePoint
     write-host "Connecting to $siteURL..." -foregroundcolor "Yellow"
     $spWeb = Get-SPWeb $siteURL
-    write-host "Value of spWeb is $spWeb" -foregroundcolor "Gray" #debug
     # Get the contents of the libraries
     foreach ($library in $libsArray) {
-        write-host "Working on $library in libsArray..." -foregroundcolor "Gray" #debug
         $curLib = $spWeb.Lists[$library]
-        write-host "Current library list is $curLib." -foregroundcolor "Gray" #debug
         $libItems = $curLib.items
         # Check each item for each of the keywords
         foreach ($item in $libItems) {
-            write-host "Current item is $($item.Title)." -foregroundcolor "Gray" #debug
             # Step through each keyword
             foreach ($keyword in $keywordsArray) {
-                write-host "Current keyword is $keyword" -foregroundcolor "Gray" #debug
                 write-host "Building search for item $($item.Title)..." -foregroundcolor "Yellow"
                 # Build the regx search
                 $search = GetRegxPattern $keyword
-                #write-host "Search is $search" -foregroundcolor "Gray"
-                write-host "Search is $search" -foregroundcolor "Gray" #debug
                 write-host "Checking keywords..." -foregroundcolor "Yellow"
                 # Get the number of items in the list
                 $totalListItems = $curLib.Items.Count
-                write-host "There are $totalListItems items in $curLib" -ForegroundColor "Magenta" #debug
                 # Arrays start at zero so...
                 $itemsToProcess = $totalListItems - 1
-                write-host "Processing array position $currentItemNo" -ForegroundColor "DarkRed" #debug
                 # Get the contents of the current page
-                #$reader = new-object System.IO.StreamReader($curLib.Items[$currentItemNo].File.OpenBinaryStream()) #works
-                #$str = $reader.ReadToEnd() #works
-                $str = [System.Text.Encoding]::ASCII.GetString($item.File.OpenBinary()) #untested
-                write-host "Page content is $str" -foregroundcolor "White" #debug
+                $reader = new-object System.IO.StreamReader($curLib.Items[$currentItemNo].File.OpenBinaryStream())
+                $str = $reader.ReadToEnd()
                 # Search the page for our keyword
                 if ($str -match $search) {
                     write-host "Matched on keyword $search" -foregroundcolor "Magenta"
@@ -104,15 +84,10 @@ function fixString ($siteURL, $keywordsArray, $libsArray) {
                     $item.File.CheckOut()
                     # Replace the keyword with the new content
                     write-host "Replacing content..." -foregroundcolor "Yellow"
-                    #$item["Page Content"] = $str.replace($search, "") # Doesn't Work
-                    $newPageContent = [System.Text.RegularExpressions.Regex]::Replace($str, $search , "") # This works
-                    #convertToBytes $newPageContent # convert to UTF8
-                    $item["Page Content"] = $newPageContent # This works
-                    write-host "New page content is $newPageContent" -ForegroundColor "White"
+                    $newPageContent = [System.Text.RegularExpressions.Regex]::Replace($str, $search , "")
                     # Write the updated page
-                    write-host "Writing update..." -foregroundcolor "Yellow" # This stuff doesn't work
-                    $item.File.SaveBinary([System.Text.Encoding]::ASCII.GetBytes($str)) #untested
-                    #$item.File.SaveBinary($newPageContent) # Doesn't work
+                    write-host "Writing update..." -foregroundcolor "Yellow"
+                    $item.File.SaveBinary([System.Text.Encoding]::ASCII.GetBytes($newPageContent)) 
                     $item.File.Update()
                     # Check the page in
                     write-host "Checking in..." -foregroundcolor "Yellow"
@@ -134,96 +109,8 @@ function fixString ($siteURL, $keywordsArray, $libsArray) {
             # Done checking the item for all keywords, increase the array position of the current item so we read the contents of the right item
             $currentItemNo = $currentItemNo + 1
         } # End items loop
-        
     } # End library loop
-    
-# Eventually, end function
-
-
-    # Get pages list
-        # Loop through list of pages
-    # Get the page
-    #$pweb = [Microsoft.SharePoint.Publishing.PublishingWeb]::GetPublishingWeb($SPWeb)
-    #$pages = $pweb.GetPublishingPages($pweb)
-    
-
-
-    # # Process each keyword
-    # foreach ($keyword in $keywordsArray) {
-    #     $search = GetRegxPattern $keyword
-    #     # Check the page for each keyword
-    #     if ($page.PageContent -match $search) {
-    #         # Checkout the page
-    #         $item.File.CheckOut()
-    #         # Replace the page content
-    #         $item["Page Content"] = $item["Page Content"].replace($search, $content)
-    #         # Write the update
-    #         $item.Update()
-    #         # Check the page back in
-    #         $item.File.CheckIn()
-    #         # Publish it
-    #         $item.File.Publish()
-    #         # Approve it
-    #         $item.File.Approve()
-    #     }
-    # }
-
-    # === Old crap to remove ===
-    # Page contains our search
-    
-
-    # Get the page to check for issues
-
-    # Get the page as a string?
-    # Looks like we can just do a content search instead
-    #if ($bla["Page Content"].contains($search))
-
-    # Check if the page has the keyword
-
-    # Page has the keyword
-        # Checkout the page for editing
-        #$bla.CheckOut
-
-        # Replace the keyword with the fix
-
-        # Write the update
-
-        # Check the item back in
-        #$bla.CheckIn()
-
-
-    # Open a connection to SP and fetch the list to work on
-    #$spWeb = Get-SPWeb $siteURL # Connect to SharePoint
-    #$spList = $spWeb.Lists[$siteList]
-
-    # Open a connection to the web
-#     $web = New-Object System.Net.WebClient
-#     #$web.UseDefaultCredentials=$true
-#     # Feed the stupid proxy our creds to get out to the web
-#     $web.Proxy.Credentials = [System.Net.CredentialCache]::DefaultNetworkCredentials
-#     # Dunno why this is needed; Google said to have it
-#     $web | Get-Member
-
-#     # Fetch our site as a string
-#     $siteAsString = $web.DownloadString($siteUrl)
-#     # What we'll be replacing with?
-#     $content = '"<%@ Register TagPrefix="WpNs1" Namespace="Microsoft.SharePoint.Portal.WebControls" Assembly="Microsoft.SharePoint.Portal, Version=12.0.0.0, Culture=neutral, PublicKeyToken=71e9bce111e9429c"%>
-# <%@ Register TagPrefix="WpNs0" Namespace="AERotatorWebpart" Assembly="AERotatorWebpart, Version=1.0.0.0, Culture=neutral, PublicKeyToken=8db6b6736dcbda89"%>
-# <%-- _lcid="1033" _version="12.0.4518" _dal="1" --%>
-# <%-- _LocalBinding --%>
-# <%@ Page language="C#" MasterPageFile="~masterurl/default.master"    Inherits="Microsoft.SharePoint.WebPartPages.WebPartPage,Microsoft.SharePoint,Version=12.0.0.0,Culture=neutral,PublicKeyToken=71e9bce111e9429c" meta:progid="SharePoint.WebPartPage.Document" %>
-# <%@ Register Tagprefix="SharePoint" Namespace="Microsoft.SharePoint.WebControls" Assembly="Microsoft.SharePoint, Version=12.0.0.0, Culture=neutral, PublicKeyToken=71e9bce111e9429c" %> <%@ Register Tagprefix="Utilities" Namespace="Microsoft.SharePoint.Utilities" Assembly="Microsoft.SharePoint, Version=12.0.0.0, Culture=neutral, PublicKeyToken=71e9bce111e9429c" %> <%@ Import Namespace="Microsoft.SharePoint" %> <%@ Register Tagprefix="WebPartPages" Namespace="Microsoft.SharePoint.WebPartPages" Assembly="Microsoft.SharePoint, Version=12.0.0.0, Culture=neutral, PublicKeyToken=71e9bce111e9429c" %>"'
-
-#     # What we need to replace
-#     $keyword = "AERotatorWebpart"
-#     # Assuming this is what we want
-#     if ($siteAsString -match $keyword) {
-#         # Build the pattern to replace
-#         $pattern = GetRegxPattern $keyword
-#         # Replace the bad string or something
-#         $replaced = [System.Text.RegularExpressions.Regex]::Replace($content, $pattern , "")
-#     }
-}
+} # End of function!
 processKeywordsList $myKeywordsList $myLibsList $mySitesList
 write-host "All done! See Ya!" -foregroundcolor "Green"
 # END OF FILE
