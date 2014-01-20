@@ -72,14 +72,14 @@ function fixString ($siteURL, $keywordsArray, $libsArray) {
         write-host "Working on $library in libsArray..." -foregroundcolor "Gray" #debug
         $curLib = $spWeb.Lists[$library]
         write-host "Current library list is $curLib." -foregroundcolor "Gray" #debug
-        $libItems = $curLib.items
+        #$libItems = $curLib.items
         # Check each item for each of the keywords
-        foreach ($item in $libItems) {
-            write-host "Current item is $($item.Title)." -foregroundcolor "Gray" #debug
+        foreach ($file in $curLib.RootFolder.Items) {
+            write-host "Current item is $($file.Title)." -foregroundcolor "Gray" #debug
             # Step through each keyword
             foreach ($keyword in $keywordsArray) {
                 write-host "Current keyword is $keyword" -foregroundcolor "Gray" #debug
-                write-host "Building search for item $($item.Title)..." -foregroundcolor "Yellow"
+                write-host "Building search for item $($file.Title)..." -foregroundcolor "Yellow"
                 # Build the regx search
                 $search = GetRegxPattern $keyword
                 #write-host "Search is $search" -foregroundcolor "Gray"
@@ -94,32 +94,32 @@ function fixString ($siteURL, $keywordsArray, $libsArray) {
                 # Get the contents of the current page
                 #$reader = new-object System.IO.StreamReader($curLib.Items[$currentItemNo].File.OpenBinaryStream()) #works
                 #$str = $reader.ReadToEnd() #works
-                $str = [System.Text.Encoding]::ASCII.GetString($item.File.OpenBinary()) #untested
+                $str = [System.Text.Encoding]::ASCII.GetString($file.OpenBinary()) #untested
                 write-host "Page content is $str" -foregroundcolor "White" #debug
                 # Search the page for our keyword
                 if ($str -match $search) {
                     write-host "Matched on keyword $search" -foregroundcolor "Magenta"
                     # Keyword was found in the page, check it out for editing
                     write-host "Checking out page..." -foregroundcolor "Yellow"
-                    $item.File.CheckOut()
+                    $file.CheckOut()
                     # Replace the keyword with the new content
                     write-host "Replacing content..." -foregroundcolor "Yellow"
                     #$item["Page Content"] = $str.replace($search, "") # Doesn't Work
                     $newPageContent = [System.Text.RegularExpressions.Regex]::Replace($str, $search , "") # This works
                     #convertToBytes $newPageContent # convert to UTF8
-                    $item["Page Content"] = $newPageContent # This works
+                    #$item["Page Content"] = $newPageContent # This works, kinda
                     write-host "New page content is $newPageContent" -ForegroundColor "White"
                     # Write the updated page
                     write-host "Writing update..." -foregroundcolor "Yellow" # This stuff doesn't work
-                    $item.File.SaveBinary([System.Text.Encoding]::ASCII.GetBytes($str)) #untested
+                    $file.SaveBinary([System.Text.Encoding]::ASCII.GetBytes($newPageContent)) #untested
                     #$item.File.SaveBinary($newPageContent) # Doesn't work
-                    $item.File.Update()
+                    #$file.Update()
                     # Check the page in
                     write-host "Checking in..." -foregroundcolor "Yellow"
-                    $item.File.CheckIn("")
+                    $file.CheckIn("")
                     # Publish the page
                     write-host "Publishing..." -foregroundcolor "Yellow"
-                    $item.File.Publish("")
+                    $file.Publish("")
                     # Approve the page changes
                     #write-host "Approving..." -foregroundcolor "Yellow"
                     #$item.File.Approve("")
