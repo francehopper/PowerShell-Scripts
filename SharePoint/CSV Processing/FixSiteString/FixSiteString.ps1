@@ -110,6 +110,7 @@ function fixString ($siteURL, $keywordsArray, $libsArray) {
             $currentItemNo = $currentItemNo + 1
         } # End items loop
     } # End library loop
+    $spWeb.Dispose()
 } # End of function!
 processKeywordsList $myKeywordsList $myLibsList $mySitesList
 write-host "All done! See Ya!" -foregroundcolor "Green"
