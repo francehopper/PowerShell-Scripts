@@ -1,0 +1,3 @@
+This script is designed to get specific values from a 2007 SharePoint workflow XML and transfer them to a 2010 SharePoint workflow XML. The XMLs were copied to a text file, Source being the 2007 and Target being the 2010. Basically, this script does text replacement on specific strings. You can likly change it to work with all sorts of files (noteable exception being Office documents. They're "special".)
+
+The included Excel file was just notes for me. It serves no other purpose.

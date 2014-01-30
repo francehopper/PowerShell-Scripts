@@ -1,0 +1,53 @@
+<WorkflowTemplate Name="2010 wf" Description="Routes a page for approval. Approvers can approve or reject the page, reassign the approval task, or request changes to the page." InstantiationUrl="_layouts/IniWrkflIP.aspx">
+    <WorkflowTemplateIdSet TemplateId="481d8e9a-200f-4b8d-97cd-e1552b12e5c7" BaseId="e43856d2-1bb4-40ef-b08b-016d89a00409" />
+    <AssociationData>
+        <string>
+            <dfs:myFields xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:dms="http://schemas.microsoft.com/office/2009/documentManagement/types" xmlns:dfs="http://schemas.microsoft.com/office/infopath/2003/dataFormSolution" xmlns:q="http://schemas.microsoft.com/office/infopath/2009/WSSList/queryFields" xmlns:d="http://schemas.microsoft.com/office/infopath/2009/WSSList/dataFields" xmlns:ma="http://schemas.microsoft.com/office/2009/metadata/properties/metaAttributes" xmlns:pc="http://schemas.microsoft.com/office/infopath/2007/PartnerControls" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+                <dfs:queryFields></dfs:queryFields>
+                <dfs:dataFields>
+                    <d:SharePointListItem_RW>
+                        <d:Approvers>
+                            <d:Assignment>
+                                <d:Assignee>
+                                    <pc:Person>
+                                        <pc:DisplayName></pc:DisplayName>
+                                        <pc:AccountId></pc:AccountId>
+                                        <pc:AccountType></pc:AccountType>
+                                    </pc:Person>
+                                </d:Assignee>
+                                <d:Stage xsi:nil="true" />
+                                <d:AssignmentType>Serial</d:AssignmentType>
+                            </d:Assignment>
+                        </d:Approvers>
+                        <d:ExpandGroups>true</d:ExpandGroups>
+                        <d:NotificationMessage>test</d:NotificationMessage>
+                        <d:DueDateforAllTasks>2014-01-23T13:00:00.0000000Z</d:DueDateforAllTasks>
+                        <d:DurationforSerialTasks>3</d:DurationforSerialTasks>
+                        <d:DurationUnits>Day</d:DurationUnits>
+                        <d:CC>
+                            <pc:Person>
+                                <pc:DisplayName></pc:DisplayName>
+                                <pc:AccountId></pc:AccountId>
+                                <pc:AccountType></pc:AccountType>
+                            </pc:Person>
+                        </d:CC>
+                        <d:CancelonRejection>true</d:CancelonRejection>
+                        <d:CancelonChange>true</d:CancelonChange>
+                        <d:EnableContentApproval>true</d:EnableContentApproval>
+                    </d:SharePointListItem_RW>
+                </dfs:dataFields>
+            </dfs:myFields>
+        </string>
+    </AssociationData>
+    <Metadata>
+        <InitiationCategories>
+            <string>List;Language:1033;#ContentType;Language:1033</string>
+        </InitiationCategories>
+        <Instantiation_FormURI>
+            <string>/_catalogs/wfpub/PublishingApproval/reviewpublishing_1033.xsn</string>
+        </Instantiation_FormURI>
+        <AssignmentStagesName>
+            <string>Approvers</string>
+        </AssignmentStagesName>
+    </Metadata>
+</WorkflowTemplate>

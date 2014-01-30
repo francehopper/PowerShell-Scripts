@@ -1,0 +1,1 @@
+This script takes a bunch of SharePoint sites (although it should be easy to adapt to any kind), and gets the actual site URL. In this case, URLs for lists were provided (about 50) that needed the /Lists part removed. The processed URLs are spat out to a log file.

@@ -1,0 +1,58 @@
+<WorkflowTemplate Name="Work Item Approval" Description="Routes a document for approval. Approvers can approve or reject the document, reassign the approval task, or request changes to the document." InstantiationUrl="_layouts/IniWrkflIP.aspx">
+    <WorkflowTemplateIdSet TemplateId="c0bf4803-7480-4bd9-a18e-93fd08c6ece7" BaseId="c6964bff-bf8d-41ac-ad5e-b61ec111731c" />
+    <AssociationData>
+        <string>
+            <my:myFields xml:lang="en-us" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:my="http://schemas.microsoft.com/office/infopath/2003/myXSD">
+                <my:Reviewers>
+                    <my:Person>
+                        <my:DisplayName>Tim Cook</my:DisplayName>
+                        <my:AccountId>i:0#.w|corp\t.cook</my:AccountId>
+                        <my:AccountType>User</my:AccountType>
+                    </my:Person>
+                    <my:Person>
+                        <my:DisplayName>John Doe</my:DisplayName>
+                        <my:AccountId>i:0#.w|corp\john.doe</my:AccountId>
+                        <my:AccountType>User</my:AccountType>
+                    </my:Person>
+                </my:Reviewers>
+                <my:CC>
+                    <my:Person>
+                        <my:DisplayName>Jane Doe</my:DisplayName>
+                        <my:AccountId>i:0#.w|corp\jane.doe</my:AccountId>
+                        <my:AccountType>User</my:AccountType>
+                    </my:Person>
+                </my:CC>
+                <my:DueDate xsi:nil="true">foobar</my:DueDate>
+                <my:Description>test message</my:Description>
+                <my:Title></my:Title>
+                <my:DefaultTaskType>1</my:DefaultTaskType>
+                <my:CreateTasksInSerial>true</my:CreateTasksInSerial>
+                <my:AllowDelegation>true</my:AllowDelegation>
+                <my:AllowChangeRequests>true</my:AllowChangeRequests>
+                <my:StopOnAnyReject>true</my:StopOnAnyReject>
+                <my:WantedTasks xsi:nil="true"></my:WantedTasks>
+                <my:SetMetadataOnSuccess>false</my:SetMetadataOnSuccess>
+                <my:MetadataSuccessField></my:MetadataSuccessField>
+                <my:MetadataSuccessValue></my:MetadataSuccessValue>
+                <my:ApproveWhenComplete>true</my:ApproveWhenComplete>
+                <my:TimePerTaskVal>2</my:TimePerTaskVal>
+                <my:TimePerTaskType xsi:nil="true"></my:TimePerTaskType>
+                <my:Voting>false</my:Voting>
+                <my:MetadataTriggerField></my:MetadataTriggerField>
+                <my:MetadataTriggerValue></my:MetadataTriggerValue>
+                <my:InitLock>false</my:InitLock>
+                <my:MetadataStop>false</my:MetadataStop>
+                <my:ItemChangeStop>true</my:ItemChangeStop>
+                <my:GroupTasks>true</my:GroupTasks>
+            </my:myFields>
+        </string>
+    </AssociationData>
+    <Metadata>
+        <Instantiation_FormURN>
+            <string>urn:schemas-microsoft-com:office:infopath:workflow:ReviewRouting-Init:$Subst:LCID;</string>
+        </Instantiation_FormURN>
+        <InitiationCategories>
+            <string>General</string>
+        </InitiationCategories>
+    </Metadata>
+</WorkflowTemplate>
